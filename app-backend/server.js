@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
+const morgan = require('morgan');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -8,6 +9,14 @@ const MONGO_URI = 'mongodb+srv://ma3346:D0wHzljdSXYao0ht@cluster0.bb6skif.mongod
 
 app.use(express.json());
 app.use(cors());
+
+//middleware that outputs all requests to the server console
+app.use(morgan('common'));
+app.use(morgan('dev'));
+app.use(morgan('short'));
+
+// images served from public folder (class images)
+app.use(express.static('public'));
 
 const client = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -31,11 +40,11 @@ async function startServer() {
 
     app.get('/api/search', async (req, res) => {
       const { searchFor } = req.query;
-    
+
       try {
         // Use a case-insensitive regular expression for a partial match on title or location
         const searchRegex = new RegExp(searchFor, 'i');
-        
+
         const classes = await db.collection('classes')
           .find({
             $or: [
@@ -44,7 +53,7 @@ async function startServer() {
             ]
           })
           .toArray();
-    
+
         res.json(classes);
       } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
@@ -133,7 +142,7 @@ async function startServer() {
     });
 
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`Server is running on PORT ${PORT}`);
     });
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
